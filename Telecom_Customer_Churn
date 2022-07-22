@@ -1,0 +1,165 @@
+-- CREATE TABLE public."telecom_customers"
+-- (
+-- customer_id character varying,
+-- gender character varying,
+-- age integer,
+-- married character varying,
+-- number_of_dependents integer,
+-- city character varying,
+-- zip_code integer,
+-- latitude double precision,
+-- longitude double precision,
+-- number_of_referrals integer,
+-- tenure_in_months integer,
+-- offer character varying,
+-- phone_service character varying,
+-- avg_monthly_long_dist_charges numeric,
+-- multiple_lines character varying,
+-- internet_service character varying,
+-- internet_type character varying,
+-- avg_monthly_gb_download numeric,
+-- online_security character varying,
+-- online_backup character varying,
+-- device_protection_plan character varying,
+-- premium_tech_support character varying,
+-- streaming_tv character varying,
+-- streaming_movies character varying,
+-- streaming_music character varying,
+-- unlimited_data character varying,
+-- contract character varying,
+-- paperless_billing character varying,
+-- payment_method character varying,
+-- monthly_charge numeric,
+-- total_charges numeric,
+-- total_refunds numeric,
+-- total_extra_data_charges numeric,
+-- total_long_distance_charges numeric,
+-- total_revenue numeric,
+-- customer_status character varying,
+-- churn_category character varying,
+-- churn_reason character varying
+-- );
+
+-- ALTER TABLE IF EXISTS public."telecom_customers"
+-- 	OWNER to postgres;
+	
+-- CREATE TABLE public."population"
+-- (
+-- zip_code integer,
+-- population character varying
+-- );
+
+-- ALTER TABLE IF EXISTS public."population"
+-- 	OWNER to postgres;
+
+SELECT
+*
+FROM telecom_customers
+LIMIT 1;
+
+
+-- Identifying high risk customers using churn history
+SELECT
+	contract,
+	COUNT(contract) contract_category,
+	ROUND(COUNT(contract)*100/SUM(count(contract)) OVER(),1) churn_percentage
+FROM telecom_customers
+WHERE customer_status = 'Churned'
+GROUP BY 1
+ORDER BY 3 DESC;
+
+
+-- Resaons for churn 
+SELECT
+	churn_category,
+	COUNT(churn_category) churn_C,
+	ROUND(COUNT(churn_category)*100/SUM(COUNT(churn_category)) OVER(),1) percentage_resaons
+FROM telecom_customers
+WHERE churn_category NOTNULL
+GROUP BY 1
+ORDER BY 2 DESC;
+
+
+-- Reasons for churn month on month
+SELECT
+	churn_category,
+	COUNT(churn_category) churn_count,
+	ROUND(COUNT(churn_category)*100/SUM(COUNT(churn_category)) OVER(),1) churn_percent
+FROM telecom_customers
+WHERE contract ='Month-to-Month' AND churn_category NOTNULL
+GROUP BY 1
+ORDER BY 2 DESC;
+
+-- Reasons for churn Two year
+SELECT
+	churn_category,
+	COUNT(churn_category) churn_count,
+	ROUND(COUNT(churn_category)*100/SUM(COUNT(churn_category)) OVER(),1) churn_percent
+FROM telecom_customers
+WHERE contract ='Two Year' AND churn_category NOTNULL
+GROUP BY 1
+ORDER BY 2 DESC;
+
+
+-- Reasons for churn One year
+SELECT
+	churn_category,
+	COUNT(churn_category) churn_count,
+	ROUND(COUNT(churn_category)*100/SUM(COUNT(churn_category)) OVER(),1) churn_percent
+FROM telecom_customers
+WHERE contract ='One Year' AND churn_category NOTNULL
+GROUP BY 1
+ORDER BY 2 DESC;
+	
+	
+-- Total revenue from each contract type
+SELECT
+	contract,
+	SUM(total_revenue) revenue
+FROM telecom_customers
+GROUP BY contract
+ORDER BY 2 DESC;
+
+
+-- Revenue contribution from each contract type in percentage
+SELECT
+	contract,
+	SUM(total_revenue) revenue,
+	ROUND(SUM(total_revenue)*100/(SELECT sum(total_revenue)FROM telecom_customers),1) revenue_percent
+FROM telecom_customers
+GROUP BY 1
+ORDER BY 3 ASC;
+
+
+-- Revenue to be lost from churned customers
+SELECT
+	contract,
+	SUM(total_revenue) total_revenue
+FROM telecom_customers
+WHERE customer_status = 'Churned'
+GROUP BY 1
+ORDER BY 2 DESC;
+
+
+-- percentage of each contract type from the total customers
+SELECT
+	contract,
+	COUNT(contract) total_count,
+	ROUND(COUNT(contract)*100/SUM(COUNT(contract)) OVER(),1) percentage_count
+FROM telecom_customers
+GROUP BY 1
+ORDER BY 3 DESC;
+
+-- Churn by internet service type
+SELECT
+	internet_type,
+	COUNT(customer_id) service_type
+FROM telecom_customers
+WHERE customer_status = 'Churned' AND internet_type NOTNULL
+GROUP BY 1
+ORDER BY 2 DESC;
+
+
+
+
+
